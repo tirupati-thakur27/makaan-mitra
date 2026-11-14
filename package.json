@@ -1,19 +1,18 @@
 {
   "name": "makaan-mitra",
   "version": "1.0.0",
-  "description": "",
+  "description": "Zero-Brokerage Bachelor & Student Accommodation Platform",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "Tirupati Thakur",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
     "cors": "^2.8.6",
     "express": "^5.3.0",
-    "sqlite3": "^6.0.1"
+    "sql.js": "^1.11.0"
   }
 }
