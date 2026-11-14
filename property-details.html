@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Overview & Vibe Check — Makaan Mitra</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        .navbar-premium { background: #0f172a; }
+        .prop-banner { height: 380px; object-fit: cover; border-radius: 18px; width: 100%; }
+        .spec-box { background: #f1f5f9; border-radius: 12px; padding: 0.9rem; }
+        .amenity-pill { background: #eef2ff; color: #4338ca; font-weight: 600; font-size: 0.85rem; padding: 0.5rem 1rem; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px; }
+        #miniPropMap { height: 220px; border-radius: 14px; border: 1px solid #cbd5e1; }
+        .panorama-viewer { width: 100%; height: 360px; object-fit: cover; border-radius: 12px; transition: transform 0.2s; cursor: grab; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark navbar-premium shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="index.html">
+            <i class="fa-solid fa-arrow-left text-warning"></i> Back to Explore
+        </a>
+        <div class="d-flex gap-2">
+            <button onclick="flagFakeListing()" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                <i class="fa-solid fa-flag me-1"></i> Report Broker/Fake
+            </button>
+            <span class="badge bg-success d-flex align-items-center"><i class="fa-solid fa-shield-halved me-1"></i>Zero Brokerage</span>
+        </div>
+    </div>
+</nav>
+
+<div class="container my-5">
+    <div id="propertyContent"></div>
+
+    <!-- VIBE CHECK SECTION -->
+    <div class="row g-4 mt-4">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <h4 class="fw-bold mb-1"><i class="fa-solid fa-comments text-primary me-2"></i>Community Vibe Check</h4>
+                <p class="text-muted small mb-4">Unfiltered crowd-sourced feedback on society behavior & landlord rules.</p>
+                <div id="reviewsList"></div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <h5 class="fw-bold mb-3"><i class="fa-solid fa-pen-to-square text-warning me-2"></i>Write Anonymous Vibe Check</h5>
+                <form id="vibeForm">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Your Alias / Role</label>
+                        <input type="text" id="reviewer_name" class="form-control" placeholder="e.g., TYCS Student / IT Engineer" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Vibe Score</label>
+                            <select id="rating" class="form-select">
+                                <option value="5.0">5.0 ★ Awesome</option>
+                                <option value="4.5" selected>4.5 ★ Great</option>
+                                <option value="4.0">4.0 ★ Good</option>
+                                <option value="3.0">3.0 ★ Average</option>
+                                <option value="2.0">2.0 ★ Avoid</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Landlord Interference</label>
+                            <select id="landlord_interference" class="form-select">
+                                <option value="Zero Interference">Zero Interference</option>
+                                <option value="Low">Low / Reasonable</option>
+                                <option value="Strict Curfew">Strict Curfew</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Society & Neighbor Behavior</label>
+                        <input type="text" id="society_behavior" class="form-control" placeholder="e.g., Bachelor-friendly, chill society" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Detailed Experience</label>
+                        <textarea id="comment" class="form-control" rows="3" placeholder="WiFi speed, water timings, curfew, food..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold">Submit Vibe Review</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 360 VIRTUAL TOUR MODAL -->
+<div class="modal fade" id="tour360Modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-vr-cardboard text-primary me-2"></i>360° Interactive Room View</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="tour360Img" src="" class="panorama-viewer mb-2" alt="360 Room">
+                <small class="text-muted">Move slider below to pan across the room view</small>
+                <input type="range" class="form-range mt-2" min="0" max="100" value="50" oninput="pan360(this.value)">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const propertyId = new URLSearchParams(window.location.search).get('id') || 1;
+    let realPhone = "";
+
+    async function loadPropertyDetails() {
+        const res = await fetch(`/api/properties/${propertyId}`);
+        const data = await res.json();
+        const p = data.property;
+        realPhone = p.owner_phone;
+        document.getElementById('tour360Img').src = p.panorama_img || p.img;
+
+        const amenitiesHTML = (p.amenities || "WiFi,RO Water").split(',').map(a =>
+            `<span class="amenity-pill"><i class="fa-solid fa-circle-check"></i>${a.trim()}</span>`
+        ).join('');
+
+        document.getElementById('propertyContent').innerHTML = `
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <div class="position-relative">
+                        <img src="${p.img}" class="prop-banner shadow-sm" alt="${p.title}">
+                        <button class="btn btn-dark rounded-pill px-3 py-2 position-absolute bottom-0 end-0 m-3 shadow" data-bs-toggle="modal" data-bs-target="#tour360Modal">
+                            <i class="fa-solid fa-vr-cardboard text-warning me-1"></i> Launch 360° Virtual Tour
+                        </button>
+                    </div>
+
+                    <!-- Detailed Overview Card -->
+                    <div class="card border-0 shadow-sm rounded-4 p-4 mt-4">
+                        <h5 class="fw-bold mb-2">About This Accommodation</h5>
+                        <p class="text-muted">${p.description || 'Verified student and bachelor accommodation with zero brokerage.'}</p>
+                        
+                        <div class="row g-2 my-3">
+                            <div class="col-6 col-md-3"><div class="spec-box"><small class="text-muted d-block">Furnishing</small><strong>${p.furnishing || 'Furnished'}</strong></div></div>
+                            <div class="col-6 col-md-3"><div class="spec-box"><small class="text-muted d-block">Occupancy</small><strong>${p.sharing_capacity || 'Double'}</strong></div></div>
+                            <div class="col-6 col-md-3"><div class="spec-box"><small class="text-muted d-block">Security Deposit</small><strong>₹${(p.deposit || 15000).toLocaleString()}</strong></div></div>
+                            <div class="col-6 col-md-3"><div class="spec-box"><small class="text-muted d-block">Gate / Curfew</small><strong>${p.curfew_policy || 'No Curfew'}</strong></div></div>
+                        </div>
+
+                        <h6 class="fw-bold mt-3 mb-2">Included Amenities & Facilities</h6>
+                        <div class="d-flex flex-wrap gap-2">${amenitiesHTML}</div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-primary-subtle text-primary px-3 py-2">${p.property_type}</span>
+                            <span class="badge bg-success-subtle text-success px-3 py-2">Brokerage: ₹0</span>
+                        </div>
+                        <h2 class="fw-bold mb-1">${p.title}</h2>
+                        <p class="text-muted mb-3"><i class="fa-solid fa-location-dot text-danger me-1"></i>${p.landmark} (${p.area})</p>
+                        
+                        <div class="d-flex align-items-baseline gap-2 mb-4">
+                            <h2 class="fw-bold text-primary mb-0">₹${p.rent.toLocaleString()}</h2>
+                            <span class="text-muted">/ month</span>
+                        </div>
+
+                        <!-- Privacy Shield Box -->
+                        <div class="p-3 bg-light rounded-3 border mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div><small class="text-muted d-block">Verified Property Owner</small><strong>${p.owner_name}</strong></div>
+                                <span class="badge bg-dark"><i class="fa-solid fa-lock me-1"></i>Privacy Shield</span>
+                            </div>
+                            <hr class="my-2">
+                            <div id="phoneBox" class="d-flex justify-content-between align-items-center">
+                                <span class="fw-semibold text-secondary">+91 XXXXX XXXXX</span>
+                                <button onclick="revealContact()" class="btn btn-sm btn-success rounded-pill px-3 fw-semibold">Verify & Reveal Number</button>
+                            </div>
+                        </div>
+
+                        <a href="find-roommate.html" class="btn btn-outline-primary w-100 rounded-pill fw-semibold">
+                            <i class="fa-solid fa-users me-1"></i> Find a Roommate to Split Rent
+                        </a>
+                    </div>
+
+                    <!-- Satellite Location Card -->
+                    <div class="card border-0 shadow-sm rounded-4 p-4">
+                        <h6 class="fw-bold mb-2"><i class="fa-solid fa-satellite text-primary me-1"></i>Exact Satellite Location</h6>
+                        <div id="miniPropMap"></div>
+                    </div>
+                </div>
+            </div>`;
+
+        // Render Mini Satellite Map
+        const miniMap = L.map('miniPropMap').setView([p.lat, p.lng], 16);
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19 }).addTo(miniMap);
+        L.marker([p.lat, p.lng]).addTo(miniMap).bindPopup(p.title).openPopup();
+
+        // Render Reviews
+        const reviewsDiv = document.getElementById('reviewsList');
+        reviewsDiv.innerHTML = data.reviews.length === 0
+            ? `<p class="text-muted">No Vibe Check reviews yet. Be the first to review!</p>`
+            : data.reviews.map(r => `
+                <div class="border-bottom pb-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <strong>${r.reviewer_name}</strong>
+                        <span class="badge bg-success">${r.rating} ★</span>
+                    </div>
+                    <div class="mb-2">
+                        <span class="badge bg-light text-dark border me-1">Society: ${r.society_behavior}</span>
+                        <span class="badge bg-light text-dark border">Owner: ${r.landlord_interference}</span>
+                    </div>
+                    <p class="text-muted small mb-0">${r.comment}</p>
+                </div>`).join('');
+    }
+
+    function revealContact() {
+        document.getElementById('phoneBox').innerHTML = `
+            <span class="fw-bold text-success fs-5"><i class="fa-solid fa-phone me-2"></i>${realPhone}</span>
+            <span class="badge bg-success-subtle text-success">Verified</span>`;
+    }
+
+    function pan360(val) {
+        const offset = (val - 50) * 1.5;
+        document.getElementById('tour360Img').style.objectPosition = `${50 + offset}% center`;
+    }
+
+    async function flagFakeListing() {
+        if (!confirm("Flag this listing as a broker or misleading post for Admin audit?")) return;
+        const res = await fetch(`/api/properties/${propertyId}/flag`, { method: 'POST' });
+        if (res.ok) alert("🚩 Listing flagged! Admin will audit this property.");
+    }
+
+    document.getElementById('vibeForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const res = await fetch('/api/vibe-reviews', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                property_id: propertyId,
+                reviewer_name: document.getElementById('reviewer_name').value,
+                rating: parseFloat(document.getElementById('rating').value),
+                landlord_interference: document.getElementById('landlord_interference').value,
+                society_behavior: document.getElementById('society_behavior').value,
+                comment: document.getElementById('comment').value
+            })
+        });
+        if (res.ok) { document.getElementById('vibeForm').reset(); loadPropertyDetails(); }
+    });
+
+    loadPropertyDetails();
+</script>
+</body>
+</html>

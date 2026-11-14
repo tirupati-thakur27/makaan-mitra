@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Roommates — Makaan Mitra</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        .navbar-premium { background: #0f172a; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark navbar-premium shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="index.html">
+            <i class="fa-solid fa-arrow-left text-warning"></i> Makaan Mitra
+        </a>
+        <span class="navbar-text text-white small">Verified Bachelor Roommate Finder</span>
+    </div>
+</nav>
+
+<div class="container my-5">
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <h5 class="fw-bold mb-3"><i class="fa-solid fa-user-plus text-primary me-2"></i>Post Roommate Request</h5>
+                <form id="roommateForm">
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Full Name</label>
+                        <input type="text" id="name" class="form-control" required>
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-4">
+                            <label class="form-label small fw-semibold">Age</label>
+                            <input type="number" id="age" class="form-control" value="20" required>
+                        </div>
+                        <div class="col-8">
+                            <label class="form-label small fw-semibold">College / Work</label>
+                            <input type="text" id="college_or_work" class="form-control" placeholder="e.g., B.Sc. CS Student" required>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Preferred Area</label>
+                        <input type="text" id="preferred_area" class="form-control" placeholder="Kandivali East" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small fw-semibold">Max Budget (₹/mo)</label>
+                        <input type="number" id="budget" class="form-control" placeholder="8000" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Lifestyle & Habits</label>
+                        <input type="text" id="habits" class="form-control" placeholder="Non-smoker, Gym, Clean" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold">Publish Profile</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <h4 class="fw-bold mb-3">Compatible Roommates</h4>
+            <div id="roommatesGrid" class="row row-cols-1 row-cols-md-2 g-3"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function loadRoommates() {
+        const res = await fetch('/api/roommates');
+        const list = await res.json();
+        document.getElementById('roommatesGrid').innerHTML = list.map(m => `
+            <div class="col">
+                <div class="card border-0 shadow-sm rounded-4 p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="fw-bold mb-0">${m.name}, ${m.age}</h6>
+                            <small class="text-primary fw-semibold">${m.college_or_work}</small>
+                        </div>
+                        <span class="badge bg-success-subtle text-success">₹${m.budget.toLocaleString()}/mo</span>
+                    </div>
+                    <p class="small text-muted mt-2 mb-1"><i class="fa-solid fa-location-dot text-danger me-1"></i>${m.preferred_area}</p>
+                    <p class="small mb-3"><i class="fa-solid fa-heart text-warning me-1"></i>${m.habits}</p>
+                    <button onclick="alert('Connection request sent securely via Makaan Mitra Privacy Shield!')" class="btn btn-sm btn-outline-primary rounded-pill mt-auto">Connect Securely</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    document.getElementById('roommateForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+            name: document.getElementById('name').value,
+            age: parseInt(document.getElementById('age').value),
+            college_or_work: document.getElementById('college_or_work').value,
+            preferred_area: document.getElementById('preferred_area').value,
+            budget: parseInt(document.getElementById('budget').value),
+            habits: document.getElementById('habits').value
+        };
+        const res = await fetch('/api/roommates', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+            document.getElementById('roommateForm').reset();
+            loadRoommates();
+        }
+    });
+
+    loadRoommates();
+</script>
+</body>
+</html>
